@@ -145,15 +145,3 @@ plt.fill_between(x_array, lorentz_peak_1.min(), lorentz_peak_1, facecolor="green
 # peak 2
 plt.plot(x_array, lorentz_peak_2, "y",linestyle='-', linewidth=1)
 plt.fill_between(x_array, lorentz_peak_2.min(), lorentz_peak_2, facecolor="yellow", alpha=0.5)
-
-
-
-
-
-
-
-
-
-
-
-
