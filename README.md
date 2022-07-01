@@ -6,3 +6,5 @@ Example data can be found in the branch named "Data".
 Created graphs can be found in the branch named "Graphs".
 
 Make sure to adjust the paths in the code.
+
+![image](https://user-images.githubusercontent.com/99960828/176934966-a436fb29-e2a4-4f74-85f0-62cf94e03ef1.png)
