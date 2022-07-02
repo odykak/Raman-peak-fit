@@ -33,7 +33,7 @@ plt.rcParams.update({'font.size' : 12})
 cwd=os.getcwd()
 
 #Creates a folder to store the graphs inside the cwd
-# mesa= cwd+ '\\Neat PLA\\'
+# mesa= cwd+ '\\Raman peak fit\\'
 # if not os.path.exists(mesa):
 #     os.makedirs(mesa)
 
@@ -82,7 +82,7 @@ def arpls(y, lam=1e4, ratio=0.05, itermax=100):
 for index, dataframe in enumerate(data):
     fig = plt.figure(figsize=(5,5),dpi=300)
     baseline = arpls(data[index]['Intensity'][:], 1E6, 0.001)
-    baseline_subtracted = data[0]['Intensity'][:] - baseline
+    baseline_subtracted = data[index]['Intensity'][:] - baseline
     plt.plot(data[index]["Wavenumber"],baseline_subtracted,label=file_list[index],linestyle='-', linewidth=1,) #marker=markers[index], mfc='w',
     
     # Axes limits. Adjust accordingly.
@@ -112,36 +112,36 @@ for index, dataframe in enumerate(data):
     # Legend
     plt.legend(loc=('upper right'),frameon=False)  # Adds the legend. # loc='center',bbox_to_anchor=(1.2,0.5),
 
+    #Peak fitting
+    y_array=baseline_subtracted
+    x_array=data[index]['Wavenumber'].copy()
 
-#Peak fitting
-baseline = arpls(data[index]['Intensity'][:], 1E6, 0.001)
-baseline_subtracted = data[0]['Intensity'][:] - baseline
-y_array=baseline_subtracted
-x_array=data[0]['Wavenumber'].copy()
+    def _1Lorentzian(x, amp, cen, wid):
+        return amp*wid**2/((x-cen)**2+wid**2)
 
-def _1Lorentzian(x, amp, cen, wid):
-    return amp*wid**2/((x-cen)**2+wid**2)
+    #2 lorentzian in reality
+    def _3Lorentzian(x, amp1, cen1, wid1, amp2,cen2,wid2):
+        return (amp1*wid1**2/((x-cen1)**2+wid1**2)) +\
+                (amp2*wid2**2/((x-cen2)**2+wid2**2))
 
-#2 lorentzian in reality
-def _3Lorentzian(x, amp1, cen1, wid1, amp2,cen2,wid2):
-    return (amp1*wid1**2/((x-cen1)**2+wid1**2)) +\
-            (amp2*wid2**2/((x-cen2)**2+wid2**2))
+    popt_3lorentz, pcov_3lorentz = scipy.optimize.curve_fit(_3Lorentzian, x_array, y_array, p0=[400, 1300, 100,500, 1500, 100])
 
-popt_3lorentz, pcov_3lorentz = scipy.optimize.curve_fit(_3Lorentzian, x_array, y_array, p0=[400, 1300, 100,500, 1500, 100])
+    perr_3lorentz = np.sqrt(np.diag(pcov_3lorentz))
 
-perr_3lorentz = np.sqrt(np.diag(pcov_3lorentz))
+    pars_1 = popt_3lorentz[0:3]
+    pars_2 = popt_3lorentz[3:6]
+    lorentz_peak_1 = _1Lorentzian(x_array, *pars_1)
+    lorentz_peak_2 = _1Lorentzian(x_array, *pars_2)
 
-pars_1 = popt_3lorentz[0:3]
-pars_2 = popt_3lorentz[3:6]
-lorentz_peak_1 = _1Lorentzian(x_array, *pars_1)
-lorentz_peak_2 = _1Lorentzian(x_array, *pars_2)
+    plt.plot(x_array, _3Lorentzian(x_array, *popt_3lorentz), 'r--', linewidth=0.7)
 
-plt.plot(x_array, _3Lorentzian(x_array, *popt_3lorentz), 'r--', linewidth=0.7)
+    # peak 1
+    plt.plot(x_array, lorentz_peak_1, "g",linestyle='-', linewidth=1)
+    plt.fill_between(x_array, lorentz_peak_1.min(), lorentz_peak_1, facecolor="green", alpha=0.5)
 
-# peak 1
-plt.plot(x_array, lorentz_peak_1, "g",linestyle='-', linewidth=1)
-plt.fill_between(x_array, lorentz_peak_1.min(), lorentz_peak_1, facecolor="green", alpha=0.5)
-
-# peak 2
-plt.plot(x_array, lorentz_peak_2, "y",linestyle='-', linewidth=1)
-plt.fill_between(x_array, lorentz_peak_2.min(), lorentz_peak_2, facecolor="yellow", alpha=0.5)
+    # peak 2
+    plt.plot(x_array, lorentz_peak_2, "y",linestyle='-', linewidth=1)
+    plt.fill_between(x_array, lorentz_peak_2.min(), lorentz_peak_2, facecolor="yellow", alpha=0.5)
+    
+    #saving
+    # plt.savefig(mesa+'#'+str(index+1)+'_0.25 mm fiber'+'.png', dpi=300,bbox_inches="tight")
